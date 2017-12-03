@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]
+    then
+    echo ""
+    echo "Error. No parameter."
+    echo "Correct use:"
+    echo "$0 {file_name}"
+    echo ""
+    exit 0
+    fi
+
+if [ ! -f "$1" ]
+    then
+    echo "The '$1' file does not exist"
+    exit 0
+    fi
+
+filename=$1
+filename_temp=$(basename "$filename")
+temp_dir="$HOME/.logtail2"
+counter_file="$temp_dir/tail_$filename_temp.last"
+temp_filename="$temp_dir/$filename_temp.tmp"
+
+if [ ! -d "$temp_dir" ]
+    then
+    mkdir $temp_dir
+    fi
+
+if [ ! -f "$counter_file" ]
+    then
+    last='0'
+    else
+    last=`cat $counter_file | xargs`
+    fi
+
+
+# Checking how many lines are currently in the file
+# If it's less than before it means it's a new one
+
+act=`awk '1' $1 | wc -l`
+
+if [ $((act-last)) -lt 0 ]
+    then
+    #Previously there were more lines, so it must be a new file
+    rm -rf $counter_file
+    $0 $1
+    exit 1
+    fi
+
+last2=$(($last + 1))
+tail -n +$last2 $filename > $temp_filename
+
+# A trick to count the last line
+# wc does not do this
+n=`awk '1' $temp_filename | wc -l`
+nn=$(($n + $last))
+echo $nn > $counter_file
+
+cat $temp_filename
+rm -rf $temp_filename
+
+
+
