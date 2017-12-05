@@ -1,14 +1,71 @@
 #!/usr/bin/env bash
 
+
+# global variables
+
+temp_dir="$HOME/.logtail2"
+filename=$1
+filename_temp=$(basename "$filename")
+counter_file="$temp_dir/tail_$filename_temp.last"
+temp_filename="$temp_dir/$filename_temp.tmp"
+
+
 if [ -z "$1" ]
     then
     echo ""
-    echo "Error. No parameter."
-    echo "Correct use:"
+    echo "!!! Error. No parameter."
+    echo "To install to /usr/bin run with parameter --install (as root)"
+    echo "$0 --install"
+    echo "To check version number type: -V"
+    echo "logtail --version"
+    echo ""
+    echo "For regular use, run with file name:"
     echo "$0 {file_name}"
     echo ""
     exit 0
     fi
+
+
+if [ "$1" = "--version" ]
+    then
+    v=`cat $temp_dir/version | xargs`
+    echo ""
+    echo "This version number is: $v"
+    echo ""
+    exit 1
+    fi
+
+if [ "$1" = "--install" ]
+    then    
+    if [ -f "/usr/bin/logtail2" ]
+	then
+	rm -rf /usr/bin/logtail2
+	if [ -f "/usr/bin/logtail2" ]
+	    then
+	    echo "There was a problem with the installation :(. Are you 'root' now?"
+	    fi
+	fi
+    cp $0 /usr/bin/logtail2
+    chmod 777 /usr/bin/logtail2
+    echo ""
+    if [ -f "/usr/bin/logtail2" ]
+	then
+	echo "The installation went correctly :)"
+	else
+	echo "There was a problem with the installation :(. Are you 'root' now?"
+	fi
+    echo ""
+    # update version number
+    if [ -f "$temp_dir/version" ]
+	then
+	rm -rf $temp_dir/version
+	fi
+    cp version $temp_dir/version
+    exit 1
+    fi
+
+
+
 
 if [ ! -f "$1" ]
     then
@@ -16,11 +73,7 @@ if [ ! -f "$1" ]
     exit 0
     fi
 
-filename=$1
-filename_temp=$(basename "$filename")
-temp_dir="$HOME/.logtail2"
-counter_file="$temp_dir/tail_$filename_temp.last"
-temp_filename="$temp_dir/$filename_temp.tmp"
+
 
 if [ ! -d "$temp_dir" ]
     then
